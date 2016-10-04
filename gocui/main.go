@@ -59,65 +59,6 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 	return g.SetCurrentView(vPlatforms)
 }
 
-func cursorDown(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cx, cy := v.Cursor()
-		if err := v.SetCursor(cx, cy+1); err != nil {
-			ox, oy := v.Origin()
-			if err := v.SetOrigin(ox, oy+1); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func cursorUp(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		ox, oy := v.Origin()
-		cx, cy := v.Cursor()
-		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
-			if err := v.SetOrigin(ox, oy-1); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func menuDown(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cx, cy := v.Cursor()
-		ox, oy := v.Origin()
-
-		if err := v.SetCursor(cx, cy+1); err != nil {
-			if err := v.SetOrigin(ox, oy+1); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func menuUp(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		ox, oy := v.Origin()
-		cx, cy := v.Cursor()
-		if cy == oy {
-			if err := v.SetOrigin(ox, oy); err != nil {
-				return err
-			}
-			return nil
-		}
-		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
-			if err := v.SetOrigin(ox, oy-1); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func submit(g *gocui.Gui, v *gocui.View) error {
 	return message(g, fmt.Sprintf("Submitted %s", opt))
 }
@@ -171,6 +112,106 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx, cy+1); err != nil {
+			ox, oy := v.Origin()
+			if err := v.SetOrigin(ox, oy+1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		ox, oy := v.Origin()
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
+			if err := v.SetOrigin(ox, oy-1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func menuDown(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		cx, cy := v.Cursor()
+		ox, oy := v.Origin()
+		if err := v.SetCursor(cx, cy+1); err != nil {
+			if err := v.SetOrigin(ox, oy+1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func menuUp(g *gocui.Gui, v *gocui.View) error {
+	if v != nil {
+		ox, oy := v.Origin()
+		cx, cy := v.Cursor()
+		if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
+			if err := v.SetOrigin(ox, oy-1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func textDown(g *gocui.Gui, v *gocui.View) error {
+	if v, err := g.View(vText); err == nil {
+		ox, oy := v.Origin()
+		oy = oy + 10
+		v.SetOrigin(ox, oy)
+	}
+	return nil
+}
+
+func textUp(g *gocui.Gui, v *gocui.View) error {
+	if v, err := g.View(vText); err == nil {
+		ox, oy := v.Origin()
+		oy = oy - 10
+		v.SetOrigin(ox, oy)
+	}
+	return nil
+}
+
+func destinationsMenuDown(g *gocui.Gui, v *gocui.View) error {
+	length := 9
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	if cy+oy < length-1 {
+		return menuDown(g, v)
+	}
+	return nil
+}
+
+func platformsMenuDown(g *gocui.Gui, v *gocui.View) error {
+	length := 3
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	if cy+oy < length-1 {
+		return menuDown(g, v)
+	}
+	return nil
+}
+
+func transcriptsMenuDown(g *gocui.Gui, v *gocui.View) error {
+	length := 5
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	if cy+oy < length-1 {
+		return menuDown(g, v)
+	}
+	return nil
+}
+
 func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(vPlatforms, gocui.KeyTab, gocui.ModNone, nextView); err != nil {
 		return err
@@ -196,19 +237,19 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(vText, gocui.KeyTab, gocui.ModNone, nextView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(vPlatforms, gocui.KeyArrowDown, gocui.ModNone, menuDown); err != nil {
+	if err := g.SetKeybinding(vPlatforms, gocui.KeyArrowDown, gocui.ModNone, platformsMenuDown); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(vPlatforms, gocui.KeyArrowUp, gocui.ModNone, menuUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(vTranscripts, gocui.KeyArrowDown, gocui.ModNone, menuDown); err != nil {
+	if err := g.SetKeybinding(vTranscripts, gocui.KeyArrowDown, gocui.ModNone, transcriptsMenuDown); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(vTranscripts, gocui.KeyArrowUp, gocui.ModNone, menuUp); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(vDestinations, gocui.KeyArrowDown, gocui.ModNone, menuDown); err != nil {
+	if err := g.SetKeybinding(vDestinations, gocui.KeyArrowDown, gocui.ModNone, destinationsMenuDown); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding(vDestinations, gocui.KeyArrowUp, gocui.ModNone, menuUp); err != nil {
@@ -238,29 +279,11 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding(global, gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(global, gocui.KeyPgdn, gocui.ModNone, downText); err != nil {
+	if err := g.SetKeybinding(global, gocui.KeyPgdn, gocui.ModNone, textDown); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding(global, gocui.KeyPgup, gocui.ModNone, upText); err != nil {
+	if err := g.SetKeybinding(global, gocui.KeyPgup, gocui.ModNone, textUp); err != nil {
 		return err
-	}
-	return nil
-}
-
-func downText(g *gocui.Gui, v *gocui.View) error {
-	if v, err := g.View(vText); err == nil {
-		ox, oy := v.Origin()
-		oy = oy + 10
-		v.SetOrigin(ox, oy)
-	}
-	return nil
-}
-
-func upText(g *gocui.Gui, v *gocui.View) error {
-	if v, err := g.View(vText); err == nil {
-		ox, oy := v.Origin()
-		oy = oy - 10
-		v.SetOrigin(ox, oy)
 	}
 	return nil
 }
@@ -349,9 +372,15 @@ func layout(g *gocui.Gui) error {
 		v.Title = "  Destination Institution  "
 		v.Highlight = true
 
+		fmt.Fprintln(v, " Capilano University ")
 		fmt.Fprintln(v, " Douglas College ")
 		fmt.Fprintln(v, " Kwantlen Polytechnical University ")
+		fmt.Fprintln(v, " Langara Community College ")
 		fmt.Fprintln(v, " Simon Fraser University ")
+		fmt.Fprintln(v, " Thompson Rivers University ")
+		fmt.Fprintln(v, " University of British Columbia ")
+		fmt.Fprintln(v, " University of the Fraser Valley ")
+		fmt.Fprintln(v, " Vancouver Island University ")
 	}
 
 	// submit button
